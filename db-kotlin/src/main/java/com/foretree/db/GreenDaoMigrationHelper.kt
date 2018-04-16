@@ -15,8 +15,9 @@ import kotlin.collections.ArrayList
  * Created by silen on 16/04/2018.
  */
 
-class GreenDaoMigrationHelper(var onMigrationListener: OnMigrationListener) {
+class GreenDaoMigrationHelper(private var onMigrationListener: OnMigrationListener) {
 
+    @SafeVarargs
     fun migrate(db: Database, vararg daoClasses: Class<out AbstractDao<*, *>>) {
         generateTempTables(db, *daoClasses)
         onMigrationListener.dropAllTables(db, true)
@@ -24,6 +25,7 @@ class GreenDaoMigrationHelper(var onMigrationListener: OnMigrationListener) {
         restoreData(db, *daoClasses)
     }
 
+    @SafeVarargs
     private fun generateTempTables(db: Database, vararg daoClasses: Class<out AbstractDao<*, *>>) {
         for (daoClass in daoClasses) {
             val daoConfig = DaoConfig(db, daoClass)
@@ -68,6 +70,7 @@ class GreenDaoMigrationHelper(var onMigrationListener: OnMigrationListener) {
         }
     }
 
+    @SafeVarargs
     private fun restoreData(db: Database, vararg daoClasses: Class<out AbstractDao<*, *>>) {
         for (daoClass in daoClasses) {
             val daoConfig = DaoConfig(db, daoClass)
@@ -95,6 +98,7 @@ class GreenDaoMigrationHelper(var onMigrationListener: OnMigrationListener) {
         }
     }
 
+    @SafeVarargs
     private fun getTypeByClass(type: Class<*>): String {
         if (type == String::class.java) {
             return "TEXT"
@@ -105,7 +109,7 @@ class GreenDaoMigrationHelper(var onMigrationListener: OnMigrationListener) {
         return "INTEGER"
     }
 
-
+    @SafeVarargs
     private fun getColumns(db: Database, tableName: String): List<String> {
         var columns: List<String> = ArrayList()
         var cursor: Cursor? = null
@@ -122,6 +126,7 @@ class GreenDaoMigrationHelper(var onMigrationListener: OnMigrationListener) {
         return columns
     }
 
+    @SafeVarargs
     private fun getColumns2(db: Database, tableName: String):List<String> {
         return db.rawQuery("SELECT * FROM $tableName limit 1", null).let {
             var columns:List<String> = ArrayList()
