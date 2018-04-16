@@ -2,11 +2,11 @@ package com.foretree.db
 
 import android.database.Cursor
 import android.text.TextUtils
-import android.util.Log
 import org.greenrobot.greendao.AbstractDao
 import org.greenrobot.greendao.database.Database
 import org.greenrobot.greendao.internal.DaoConfig
 import java.util.*
+import kotlin.collections.ArrayList
 
 /**
  * <p>
@@ -35,19 +35,18 @@ class GreenDaoMigrationHelper(var onMigrationListener: OnMigrationListener) {
             var createTableSql = "CREATE TABLE $tempTableName (%s);"
 
             val partySqlList = ArrayList<String>()
-            for (p in daoConfig.properties) {
-
+            daoConfig.properties.forEach {
                 var type: String? = null
                 try {
-                    type = getTypeByClass(p.type)
+                    type = getTypeByClass(it.type)
                 } catch (ignored: Exception) {
                 }
 
-                var party = p.columnName + " " + type
-                if (getColumns(db, tableName).contains(p.columnName)) {
+                var party = it.columnName + " " + type
+                if (getColumns2(db, tableName).contains(it.columnName)) {
                     //主键
-                    if (p.primaryKey) party += " PRIMARY KEY AUTOINCREMENT "
-                    properties.add(p.columnName)
+                    if (it.primaryKey) party += " PRIMARY KEY AUTOINCREMENT "
+                    properties.add(it.columnName)
                 } else {
                     party += " DEFAULT 0"
                 }
@@ -77,10 +76,10 @@ class GreenDaoMigrationHelper(var onMigrationListener: OnMigrationListener) {
             val tempTableName = daoConfig.tablename + "_TEMP"
             val properties = ArrayList<String>()
 
-            for (j in daoConfig.properties.indices) {
-                val columnName = daoConfig.properties[j].columnName
+            daoConfig.properties.forEach {
+                val columnName = it.columnName
 
-                if (getColumns(db, tempTableName).contains(columnName)) {
+                if (getColumns2(db, tempTableName).contains(columnName)) {
                     properties.add(columnName)
                 }
             }
@@ -106,21 +105,31 @@ class GreenDaoMigrationHelper(var onMigrationListener: OnMigrationListener) {
         return "INTEGER"
     }
 
+
     private fun getColumns(db: Database, tableName: String): List<String> {
         var columns: List<String> = ArrayList()
         var cursor: Cursor? = null
         try {
             cursor = db.rawQuery("SELECT * FROM $tableName limit 1", null)
             if (cursor != null) {
-                columns = ArrayList(Arrays.asList(*cursor!!.columnNames))
+                columns = ArrayList(Arrays.asList(*cursor.columnNames))
             }
         } catch (e: Exception) {
-            Log.v(tableName, e.message, e)
             e.printStackTrace()
         } finally {
             if (cursor != null) cursor.close()
         }
         return columns
+    }
+
+    private fun getColumns2(db: Database, tableName: String):List<String> {
+        return db.rawQuery("SELECT * FROM $tableName limit 1", null).let {
+            var columns:List<String> = ArrayList()
+            if (it != null){
+                columns = ArrayList(Arrays.asList(*it.columnNames))
+            }
+            columns
+        }
     }
 }
 
